@@ -3,6 +3,11 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Ticketing.Application;
+using Ticketing.Application.Configurations;
+using Ticketing.Application.Services;
+using Ticketing.Infrastructure;
+using Ticketing.Infrastructure.IRespository;
 
 #pragma warning disable CS8604 // Possible null reference argument.
 
@@ -69,6 +74,9 @@ builder.Services.AddMemoryCache();
 
 // Add HTTP context accessor for current user service
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddAutoMapper(typeof(MappingProfile));
+builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 // JWT Authentication
 builder.Services.AddAuthentication(options =>
