@@ -16,6 +16,10 @@ namespace Ticketing.Application.DTOs.Requests
         public required string LastName { get; set; }
         public required string Email { get; set; }
         public string? PhoneNumber { get; set; }
+    }
+
+    public class UpdateUserRole
+    {
         public Guid RoleId { get; set; }
     }
 }

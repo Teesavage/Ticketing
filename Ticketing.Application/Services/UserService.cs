@@ -4,6 +4,11 @@ using Ticketing.Domain.ApiResponse;
 using AutoMapper;
 using Ticketing.Domain.Entities;
 using Ticketing.Infrastructure.IRespository;
+using System.Security.Claims;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.Extensions.Configuration;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace Ticketing.Application.Services
 {
@@ -11,11 +16,13 @@ namespace Ticketing.Application.Services
     {
         private readonly IMapper _mapper;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IConfiguration _config;
 
-        public UserService(IMapper mapper, IUnitOfWork unitOfWork)
+        public UserService(IMapper mapper, IUnitOfWork unitOfWork, IConfiguration config)
         {
             _mapper = mapper;
             _unitOfWork = unitOfWork;
+            _config = config;
         }
 
         public async Task<ApiResponse<UserResponse>> RegisterUserAsync(UserRequest request)
@@ -44,8 +51,19 @@ namespace Ticketing.Application.Services
 
             userEntity.Id = Guid.NewGuid();
             userEntity.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+            userEntity.CreatedAt = DateTime.UtcNow;
 
             await _unitOfWork.Users.Insert(userEntity);
+            await _unitOfWork.Save();
+
+            // Add user to UserRoles table
+            var userRole = new UserRole
+            {
+                UserId = userEntity.Id,
+                RoleId = request.RoleId 
+            };
+
+            await _unitOfWork.UserRoles.Insert(userRole);
             await _unitOfWork.Save();
 
             var userResponse = _mapper.Map<UserResponse>(userEntity);
@@ -80,22 +98,24 @@ namespace Ticketing.Application.Services
             return ApiResponse<IEnumerable<UserResponse>>.SuccessResponse(response);
         }
 
-        public async Task<ApiResponse<UserResponse>> LoginUserAsync(LoginRequest request)
+        public async Task<ApiResponse<LoginResponse>> LoginUserAsync(LoginRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
-                return ApiResponse<UserResponse>.FailureResponse(new List<string> { "Email and password are required." });
+                return ApiResponse<LoginResponse>.FailureResponse(new List<string> { "Email and password are required." });
 
             var user = await _unitOfWork.Users.Get(u => u.Email == request.Email);
             if (user == null)
-                return ApiResponse<UserResponse>.FailureResponse(new List<string> { "Invalid email or password." });
+                return ApiResponse<LoginResponse>.FailureResponse(new List<string> { "Invalid email or password." });
 
-            // 🔐 Verify password using BCrypt
+            // Verify password using BCrypt
             bool isValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
             if (!isValid)
-                return ApiResponse<UserResponse>.FailureResponse(new List<string> { "Invalid email or password." });
+                return ApiResponse<LoginResponse>.FailureResponse(new List<string> { "Invalid email or password." });
 
-            var response = _mapper.Map<UserResponse>(user);
-            return ApiResponse<UserResponse>.SuccessResponse(response, "Login successful.");
+            var token = GenerateJwt(user);
+            var response = _mapper.Map<LoginResponse>(user);
+            response.Token = token;
+            return ApiResponse<LoginResponse>.SuccessResponse(response, "Login successful.");
         }
 
         public async Task<ApiResponse<UserResponse>> UpdateUserAsync(Guid userId, UpdateUserRequest request)
@@ -108,7 +128,6 @@ namespace Ticketing.Application.Services
             user.FirstName = request.FirstName ?? user.FirstName;
             user.LastName = request.LastName ?? user.LastName;
             user.Email = request.Email ?? user.Email;
-            user.RoleId = request.RoleId != Guid.Empty ? request.RoleId : user.RoleId;
             user.PhoneNumber = request.PhoneNumber ?? user.PhoneNumber;
 
             _unitOfWork.Users.Update(user);
@@ -116,6 +135,21 @@ namespace Ticketing.Application.Services
 
             var response = _mapper.Map<UserResponse>(user);
             return ApiResponse<UserResponse>.SuccessResponse(response, "User updated successfully.");
+        }
+
+        public async Task<ApiResponse<UserResponse>> UpdateUserRoleAsync(Guid userId, UpdateUserRole request)
+        {
+            var user = await _unitOfWork.Users.Get(u => u.Id == userId);
+            if (user == null)
+                return ApiResponse<UserResponse>.FailureResponse(new List<string> { "User not found." });
+
+            user.RoleId = request.RoleId != Guid.Empty ? request.RoleId : user.RoleId;
+
+            _unitOfWork.Users.Update(user);
+            await _unitOfWork.Save();
+
+            var response = _mapper.Map<UserResponse>(user);
+            return ApiResponse<UserResponse>.SuccessResponse(response, "User role updated successfully.");
         }
 
         public async Task<ApiResponse<string>> DeleteUserAsync(Guid userId)
@@ -128,6 +162,28 @@ namespace Ticketing.Application.Services
             await _unitOfWork.Save();
 
             return ApiResponse<string>.SuccessResponse("User deleted successfully.");
+        }
+
+        private string GenerateJwt(User user)
+        {
+            var claims = new[]
+            {
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.Name, user.Email),
+            new Claim(ClaimTypes.GivenName, user.FirstName),
+            new Claim(ClaimTypes.Surname, user.LastName),
+            new Claim(ClaimTypes.Role, user.Role.RoleName)
+        };
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+            var token = new JwtSecurityToken(
+                claims: claims,
+                expires: DateTime.UtcNow.AddHours(2),
+                signingCredentials: creds);
+
+            return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
 

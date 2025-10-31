@@ -6,7 +6,7 @@ namespace Ticketing.Infrastructure.IRespository
     {
         IGenericRepository<User> Users { get; }
         IGenericRepository<Role> Roles { get; }
-
+        IGenericRepository<UserRole> UserRoles { get; }
 
         Task Save();
         void ClearChangeTracker();

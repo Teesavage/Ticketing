@@ -11,6 +11,11 @@ namespace Ticketing.Api.Configurations
         {
             CreateMap<UserRequest, User>().ReverseMap();
             CreateMap<User, UserResponse>().ReverseMap();
+            CreateMap<User, LoginResponse>().ReverseMap();
+            CreateMap<User, UpdateUserRequest>().ReverseMap();
+            CreateMap<User, UpdateUserRole>().ReverseMap();
+            CreateMap<Role, RoleResponse>().ReverseMap();
+            CreateMap<Role, RoleRequest>().ReverseMap();
         }
     }
 }

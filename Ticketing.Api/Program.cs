@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Ticketing.Api.Configurations;
 using Ticketing.Application;
-using Ticketing.Application.Configurations;
 using Ticketing.Application.Services;
 using Ticketing.Infrastructure;
 using Ticketing.Infrastructure.IRespository;
@@ -77,6 +77,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
 
 // JWT Authentication
 builder.Services.AddAuthentication(options =>
