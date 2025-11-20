@@ -7,7 +7,6 @@ namespace Ticketing.Application.DTOs.Responses
         public required string LastName { get; set; }
         public required string Email { get; set; }
         public string? PhoneNumber { get; set; }
-        public required string Password { get; set; }
         public Guid RoleId { get; set; }
         public string RoleName { get; set; } = null!;
         public DateTime CreatedAt { get; set; }

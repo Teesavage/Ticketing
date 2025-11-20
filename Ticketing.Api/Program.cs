@@ -70,6 +70,10 @@ builder.Services.AddSwaggerGen(c =>
 
 // Additional services
 
+// DbContext
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 builder.Services.AddMemoryCache();
 
 // Add HTTP context accessor for current user service

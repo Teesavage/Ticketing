@@ -9,7 +9,7 @@ namespace Ticketing.Domain.Entities
         public string? PhoneNumber { get; set; }
         public required string PasswordHash { get; set; }
         public Guid RoleId { get; set; }
-        public required Role Role { get; set; }
+        public Role? Role { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

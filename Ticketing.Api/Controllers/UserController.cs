@@ -18,7 +18,7 @@ namespace Ticketing.Api.Controllers
         [HttpPost("registerClient")]
         public async Task<IActionResult> RegisterClient([FromBody] UserRequest request)
         {
-            // request.RoleId = new Guid("f2a2f1b4-6b8b-4cb9-8e8e-55d999d3b8cd"); //assign default roles
+            request.RoleId = new Guid("779dff9b-da5d-41cf-84ce-673b9aa0565f"); //assign default roles
             var response = await _userService.RegisterUserAsync(request);
             if (!response.Success)
                 return BadRequest(response);
@@ -28,7 +28,7 @@ namespace Ticketing.Api.Controllers
         [HttpPost("registerOrganizer")]
         public async Task<IActionResult> RegisterOrganizer([FromBody] UserRequest request)
         {
-            // request.RoleId = new Guid("f2a2f1b4-6b8b-4cb9-8e8e-55d999d3b8cd"); //assign default roles
+            request.RoleId = new Guid("d0e966d9-5e07-4b0c-ac02-67895c1469c0"); //assign default roles
             var response = await _userService.RegisterUserAsync(request);
             if (!response.Success)
                 return BadRequest(response);
@@ -38,7 +38,7 @@ namespace Ticketing.Api.Controllers
         [HttpPost("registerAdmin")]
         public async Task<IActionResult> RegisterAdmin([FromBody] UserRequest request)
         {
-            // request.RoleId = new Guid("f2a2f1b4-6b8b-4cb9-8e8e-55d999d3b8cd"); //assign default roles
+            request.RoleId = new Guid("56cafdee-72aa-4dcd-a61b-6403f8a1063d"); //assign default roles
             var response = await _userService.RegisterUserAsync(request);
             if (!response.Success)
                 return BadRequest(response);
@@ -48,7 +48,7 @@ namespace Ticketing.Api.Controllers
         [HttpPost("registerManager")]
         public async Task<IActionResult> RegisterManager([FromBody] UserRequest request)
         {
-            // request.RoleId = new Guid("f2a2f1b4-6b8b-4cb9-8e8e-55d999d3b8cd"); //assign default roles
+            request.RoleId = new Guid("2f16a56d-da86-4b89-a33e-956043a810ad"); //assign default roles
             var response = await _userService.RegisterUserAsync(request);
             if (!response.Success)
                 return BadRequest(response);

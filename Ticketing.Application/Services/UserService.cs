@@ -38,6 +38,9 @@ namespace Ticketing.Application.Services
             {
                 return ApiResponse<UserResponse>.FailureResponse(new List<string> { "All fields are required." });
             }
+            var validationErrors = ValidatePassword(request.Password);
+            if (validationErrors.Count > 0)
+                return ApiResponse<UserResponse>.FailureResponse(validationErrors);
 
             // Check if user already exists
             var existingUser = await _unitOfWork.Users.Get(u => u.Email == request.Email);
@@ -73,7 +76,7 @@ namespace Ticketing.Application.Services
 
         public async Task<ApiResponse<UserResponse>> GetUserByIdAsync(Guid userId)
         {
-            var user = await _unitOfWork.Users.Get(u => u.Id == userId);
+            var user = await _unitOfWork.Users.Get(u => u.Id == userId, includes: ["Role"]);
             if (user == null)
                 return ApiResponse<UserResponse>.FailureResponse(new List<string> { "User not found." });
 
@@ -83,7 +86,7 @@ namespace Ticketing.Application.Services
 
         public async Task<ApiResponse<UserResponse>> GetUserByEmailAsync(string email)
         {
-            var user = await _unitOfWork.Users.Get(u => u.Email == email);
+            var user = await _unitOfWork.Users.Get(u => u.Email == email, includes: ["Role"]);
             if (user == null)
                 return ApiResponse<UserResponse>.FailureResponse(new List<string> { "User not found." });
 
@@ -93,7 +96,7 @@ namespace Ticketing.Application.Services
 
         public async Task<ApiResponse<IEnumerable<UserResponse>>> GetAllUsersAsync()
         {
-            var users = await _unitOfWork.Users.GetAll();
+            var users = await _unitOfWork.Users.GetAll(includes: ["Role"]);
             var response = _mapper.Map<IEnumerable<UserResponse>>(users);
             return ApiResponse<IEnumerable<UserResponse>>.SuccessResponse(response);
         }
@@ -103,7 +106,7 @@ namespace Ticketing.Application.Services
             if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
                 return ApiResponse<LoginResponse>.FailureResponse(new List<string> { "Email and password are required." });
 
-            var user = await _unitOfWork.Users.Get(u => u.Email == request.Email);
+            var user = await _unitOfWork.Users.Get(u => u.Email == request.Email, includes: ["Role"]);
             if (user == null)
                 return ApiResponse<LoginResponse>.FailureResponse(new List<string> { "Invalid email or password." });
 
@@ -168,12 +171,12 @@ namespace Ticketing.Application.Services
         {
             var claims = new[]
             {
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Name, user.Email),
-            new Claim(ClaimTypes.GivenName, user.FirstName),
-            new Claim(ClaimTypes.Surname, user.LastName),
-            new Claim(ClaimTypes.Role, user.Role.RoleName)
-        };
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, user.Email),
+                new Claim(ClaimTypes.GivenName, user.FirstName),
+                new Claim(ClaimTypes.Surname, user.LastName),
+                new Claim(ClaimTypes.Role, user.Role.RoleName)
+            };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -184,6 +187,22 @@ namespace Ticketing.Application.Services
                 signingCredentials: creds);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
+        }
+
+        private List<string> ValidatePassword(string password)
+        {
+            var errors = new List<string>();
+
+            if (password.Length < 8)
+                errors.Add("Password must be at least 8 characters long.");
+
+            if (!password.Any(char.IsUpper))
+                errors.Add("Password must contain at least one uppercase letter.");
+
+            if (!password.Any(char.IsSymbol) && !password.Any(char.IsPunctuation))
+                errors.Add("Password must contain at least one special character (e.g., @, #, $, etc.).");
+
+            return errors;
         }
 
 
