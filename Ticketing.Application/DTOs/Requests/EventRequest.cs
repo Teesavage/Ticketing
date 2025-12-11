@@ -14,7 +14,7 @@ namespace Ticketing.Application.DTOs.Requests
         public string? EventTime { get; set; }
         public EventType? EventType { get; set; } //online or physical
         // public required IList<TicketType> TicketTypes { get; set; }
-        public required List<CreateTicketTypeDto> TicketTypes { get; set; }
+        public required List<TicketTypeRequest> TicketTypes { get; set; }
         public required Guid CreatedBy { get; set; }
     }
 

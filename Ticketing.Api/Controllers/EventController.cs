@@ -46,9 +46,36 @@ namespace Ticketing.Api.Controllers
         }
 
         [HttpPut("updateEvent/{eventId}")]
-        public async Task<IActionResult> UpdateEvent(long eventId, [FromBody] EventRequest request)
+        public async Task<IActionResult> UpdateEvent(long eventId, [FromBody] EventUpdateRequest request)
         {
             var response = await _eventService.UpdateEvent(eventId, request);
+            if (!response.Success)
+                return BadRequest(response);
+            return Ok(response);
+        }
+
+        [HttpPost("addTicketTypes")]
+        public async Task<IActionResult> AddTicketTypes(long eventId, [FromBody] List<TicketTypeRequest> ticketTypes)
+        {
+            var response = await _eventService.AddTicketTypes(eventId, ticketTypes);
+            if (!response.Success)
+                return BadRequest(response);
+            return Ok(response);
+        }
+
+        [HttpPut("updateTicketTypes")]
+        public async Task<IActionResult> UpdateTicketType(long eventId, long ticketTypeId, [FromBody] TicketTypeRequest ticketType)
+        {
+            var response = await _eventService.UpdateTicketType(eventId, ticketTypeId, ticketType);
+            if (!response.Success)
+                return BadRequest(response);
+            return Ok(response);
+        }
+
+        [HttpDelete("deleteTicketType")]
+        public async Task<IActionResult> DeleteTicketType(long eventId, long ticketTypeId)
+        {
+            var response = await _eventService.DeleteTicketType(eventId, ticketTypeId);
             if (!response.Success)
                 return BadRequest(response);
             return Ok(response);

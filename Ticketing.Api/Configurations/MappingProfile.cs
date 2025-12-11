@@ -26,7 +26,7 @@ namespace Ticketing.Api.Configurations
                 .ForMember(dest => dest.CreatorName, opt => opt.MapFrom(src => src.Creator.FirstName + " " + src.Creator.LastName))
                 .ForMember(dest => dest.EventTypeName, opt => opt.MapFrom(src => src.EventType.ToString()))
                 .ReverseMap();
-            CreateMap<CreateTicketTypeDto, TicketType>()
+            CreateMap<TicketTypeRequest, TicketType>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.EventId, opt => opt.Ignore())
                 .ForMember(dest => dest.Event, opt => opt.Ignore());
