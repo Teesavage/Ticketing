@@ -34,8 +34,9 @@ namespace Ticketing.Infrastructure.PaginationHelper
             public int LastPage { get; set; }
             public object DataReport { get; set; } // Optional: for summaries, etc.
 
-            public Meta(int totalCount, int pageNumber, int pageSize)
-            {
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
+        public Meta(int totalCount, int pageNumber, int pageSize)
+        {
                 TotalCount = totalCount;
                 PageSize = pageSize;
                 PageNumber = pageNumber;

@@ -5,6 +5,7 @@ using AutoMapper;
 using Ticketing.Domain.Entities;
 using Ticketing.Infrastructure.IRespository;
 using Microsoft.Extensions.Configuration;
+using Ticketing.Application.Interfaces;
 
 namespace Ticketing.Application.Services
 {

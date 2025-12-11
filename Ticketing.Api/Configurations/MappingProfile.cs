@@ -19,6 +19,17 @@ namespace Ticketing.Api.Configurations
             CreateMap<User, UpdateUserRole>().ReverseMap();
             CreateMap<Role, RoleResponse>().ReverseMap();
             CreateMap<Role, RoleRequest>().ReverseMap();
+            CreateMap<Event, EventRequest>()
+                .ForMember(dest => dest.TicketTypes, opt => opt.MapFrom(src => src.TicketTypes))
+                .ReverseMap();
+            CreateMap<Event, EventResponse>()
+                .ForMember(dest => dest.CreatorName, opt => opt.MapFrom(src => src.Creator.FirstName + " " + src.Creator.LastName))
+                .ForMember(dest => dest.EventTypeName, opt => opt.MapFrom(src => src.EventType.ToString()))
+                .ReverseMap();
+            CreateMap<CreateTicketTypeDto, TicketType>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore())
+                .ForMember(dest => dest.EventId, opt => opt.Ignore())
+                .ForMember(dest => dest.Event, opt => opt.Ignore());
         }
     }
 }

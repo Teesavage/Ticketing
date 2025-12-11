@@ -3,7 +3,7 @@ using Ticketing.Application.DTOs.Responses;
 using Ticketing.Domain.ApiResponse;
 using Ticketing.Infrastructure.PaginationHelper;
 
-namespace Ticketing.Application
+namespace Ticketing.Application.Interfaces
 {
     public interface IRoleService
     {

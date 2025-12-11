@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Ticketing.Application;
 using Ticketing.Application.DTOs.Requests;
+using Ticketing.Application.Interfaces;
 
 namespace Ticketing.Api.Controllers
 {

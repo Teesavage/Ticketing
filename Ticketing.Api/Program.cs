@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Ticketing.Api.Configurations;
-using Ticketing.Application;
+using Ticketing.Application.Interfaces;
 using Ticketing.Application.Services;
 using Ticketing.Infrastructure;
 using Ticketing.Infrastructure.IRespository;
@@ -82,6 +82,7 @@ builder.Services.AddAutoMapper(typeof(MappingProfile));
 builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
+builder.Services.AddScoped<IEventService, EventService>();
 
 // JWT Authentication
 builder.Services.AddAuthentication(options =>

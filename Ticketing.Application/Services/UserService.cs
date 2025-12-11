@@ -9,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.Extensions.Configuration;
 using System.IdentityModel.Tokens.Jwt;
+using Ticketing.Application.Interfaces;
 
 namespace Ticketing.Application.Services
 {
@@ -38,6 +39,9 @@ namespace Ticketing.Application.Services
             {
                 return ApiResponse<UserResponse>.FailureResponse(new List<string> { "All fields are required." });
             }
+            if (!IsValidEmail(request.Email))
+                return ApiResponse<UserResponse>.FailureResponse(new List<string> { "Invalid email format." });
+                
             var validationErrors = ValidatePassword(request.Password);
             if (validationErrors.Count > 0)
                 return ApiResponse<UserResponse>.FailureResponse(validationErrors);
@@ -169,6 +173,7 @@ namespace Ticketing.Application.Services
 
         private string GenerateJwt(User user)
         {
+            #pragma warning disable CS8602 // Dereference of a possibly null reference.
             var claims = new[]
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
@@ -203,6 +208,19 @@ namespace Ticketing.Application.Services
                 errors.Add("Password must contain at least one special character (e.g., @, #, $, etc.).");
 
             return errors;
+        }
+
+        private bool IsValidEmail(string email)
+        {
+            try
+            {
+                var addr = new System.Net.Mail.MailAddress(email);
+                return addr.Address == email;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
 

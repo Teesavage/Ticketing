@@ -27,6 +27,12 @@ namespace Ticketing.Infrastructure
             _db.Remove(entity);
         }
 
+        public async Task Delete(long id)
+        {
+            var entity = await _db.FindAsync(id);
+            _db.Remove(entity);
+        }
+
         public async Task DeleteGuid(Guid id)
         {
             var entity = await _db.FindAsync(id);
