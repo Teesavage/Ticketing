@@ -1,6 +1,8 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Ticketing.Application.DTOs.Requests;
 using Ticketing.Application.Interfaces;
+using Ticketing.Infrastructure.PaginationHelper;
 
 namespace Ticketing.Api.Controllers
 {
@@ -14,7 +16,7 @@ namespace Ticketing.Api.Controllers
         {
             _eventService = eventService;
         }
-
+        [Authorize(Roles = "Manager, Admin, Organizer")]
         [HttpPost("createEvent")]
         public async Task<IActionResult> CreateEvent([FromBody] EventRequest request)
         {
@@ -45,6 +47,7 @@ namespace Ticketing.Api.Controllers
             return Ok(response);
         }
 
+        [Authorize(Roles = "Manager, Admin, Organizer")]
         [HttpPut("updateEvent/{eventId}")]
         public async Task<IActionResult> UpdateEvent(long eventId, [FromBody] EventUpdateRequest request)
         {
@@ -54,6 +57,7 @@ namespace Ticketing.Api.Controllers
             return Ok(response);
         }
 
+        [Authorize(Roles = "Manager, Admin, Organizer")]
         [HttpPost("addTicketTypes")]
         public async Task<IActionResult> AddTicketTypes(long eventId, [FromBody] List<TicketTypeRequest> ticketTypes)
         {
@@ -63,6 +67,16 @@ namespace Ticketing.Api.Controllers
             return Ok(response);
         }
 
+        [HttpGet("getEventTicketTypes")]
+        public async Task<IActionResult> GetEventTicketTypes(long eventId)
+        {
+            var response = await _eventService.GetEventTicketTypes(eventId);
+            if (!response.Success)
+                return BadRequest(response);
+            return Ok(response);
+        }
+
+        [Authorize(Roles = "Manager, Admin, Organizer")]
         [HttpPut("updateTicketTypes")]
         public async Task<IActionResult> UpdateTicketType(long eventId, long ticketTypeId, [FromBody] TicketTypeRequest ticketType)
         {
@@ -72,6 +86,7 @@ namespace Ticketing.Api.Controllers
             return Ok(response);
         }
 
+        [Authorize(Roles = "Manager, Admin, Organizer")]
         [HttpDelete("deleteTicketType")]
         public async Task<IActionResult> DeleteTicketType(long eventId, long ticketTypeId)
         {
@@ -81,6 +96,7 @@ namespace Ticketing.Api.Controllers
             return Ok(response);
         }
 
+        [Authorize(Roles = "Manager, Admin, Organizer")]
         [HttpDelete("deleteEvent/{eventId}")]
         public async Task<IActionResult> DeleteEvent(long eventId)
         {
@@ -90,6 +106,7 @@ namespace Ticketing.Api.Controllers
             return Ok(response);
         }
 
+        [Authorize(Roles = "Manager, Admin, Organizer")]
         [HttpPatch("deactivateEvent/{eventId}")]
         public async Task<IActionResult> DeactivateEvent(long eventId)
         {
@@ -99,10 +116,47 @@ namespace Ticketing.Api.Controllers
             return Ok(response);
         }
 
+        [Authorize(Roles = "Manager, Admin, Organizer")]
         [HttpPatch("reactivateEvent/{eventId}")]
         public async Task<IActionResult> ReactivateEvent(long eventId)
         {
             var response = await _eventService.ReactivateEvent(eventId);
+            if (!response.Success)
+                return BadRequest(response);
+            return Ok(response);
+        }
+
+        [HttpPost("addTicket")]
+        public async Task<IActionResult> AddTicket([FromBody] TicketRequest ticket)
+        {
+            var response = await _eventService.AddTicket(ticket);
+            if (!response.Success)
+                return BadRequest(response);
+            return Ok(response);
+        }
+
+        [HttpGet("getTicketById")]
+        public async Task<IActionResult> GetTicketById(Guid ticketId)
+        {
+            var response = await _eventService.GetTicketById(ticketId);
+            if (!response.Success)
+                return BadRequest(response);
+            return Ok(response);
+        }
+
+        [HttpGet("getUserTickets")]
+        public async Task<IActionResult> GetUserTickets(Guid userId, [FromQuery] PaginationFilter paginationFilter, [FromQuery] bool includeInactive = false)
+        {
+            var response = await _eventService.GetUserTickets(userId, paginationFilter, includeInactive);
+            if (!response.Success)
+                return BadRequest(response);
+            return Ok(response);
+        }
+
+        [HttpGet("getAllTickets")]
+        public async Task<IActionResult> GetAllTickets([FromQuery] PaginationFilter paginationFilter, [FromQuery] bool includeInactive = false)
+        {
+            var response = await _eventService.GetAllTickets(paginationFilter, includeInactive);
             if (!response.Success)
                 return BadRequest(response);
             return Ok(response);

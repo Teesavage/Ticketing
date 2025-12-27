@@ -11,6 +11,11 @@ namespace Ticketing.Infrastructure.IRespository
             List<string> includes = null);
         Task<IList<T>> GetAll(PaginationFilter paginationFilter, List<string> includes = null);
         Task<T> Get(Expression<Func<T, bool>> expression, List<string> includes = null);
+        Task<IList<T>> GetAllWithTracking(Expression<Func<T, bool>> expression = null,
+            Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null,
+            List<string> includes = null);
+        Task<IList<T>> GetAllWithTracking(PaginationFilter paginationFilter, List<string> includes = null);
+        Task<T> GetWithTracking(Expression<Func<T, bool>> expression, List<string> includes = null);
         Task<IEnumerable<T>> GetWithIncludes(Expression<Func<T, bool>>? filter = null, params Expression<Func<T, object>>[] includeProperties);
         Task Insert(T entity);
         Task InsertRange(IEnumerable<T> entities);

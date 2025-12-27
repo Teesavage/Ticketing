@@ -44,14 +44,12 @@ namespace Ticketing.Application.DTOs.Requests
         public int QuantityAvailable { get; set; }
     }
 
-    // For ticket response
-    public class TicketTypeResponse
+    public class TicketRequest
     {
-        public long Id { get; set; }
-        public string? Type { get; set; }
-        public decimal Price { get; set; }
-        public int QuantityAvailable { get; set; }
-        public long EventId { get; set; }
+        public Guid UserId { get; set; }
+        public int TicketTypeId { get; set; }
+        public DateTime PurchaseTime { get; set; }
+        public int Quantity { get; set; }
     }
 
 }

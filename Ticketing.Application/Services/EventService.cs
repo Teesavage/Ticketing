@@ -8,6 +8,7 @@ using Ticketing.Domain;
 using Ticketing.Domain.ApiResponse;
 using Ticketing.Domain.Entities;
 using Ticketing.Infrastructure.IRespository;
+using Ticketing.Infrastructure.PaginationHelper;
 
 namespace Ticketing.Application.Services
 {
@@ -24,10 +25,13 @@ namespace Ticketing.Application.Services
             _config = config;
         }
 
+        #pragma warning disable CS8604 // Possible null reference argument.
+        #pragma warning disable CS8602 // Dereference of a possibly null reference.
+
         public async Task<ApiResponse<EventResponse>> AddEvent(EventRequest newEvent)
         {
             if (newEvent is null)
-                return ApiResponse<EventResponse>.FailureResponse(new List<string> { "Event is null" });
+                return ApiResponse<EventResponse>.FailureResponse(["Event is null"]);
 
             var errors = new List<string>();
 
@@ -97,7 +101,7 @@ namespace Ticketing.Application.Services
                 // Check if user exists 
                 var user = await _unitOfWork.Users.Get(u => u.Id == newEvent.CreatedBy);
                 if (user == null)
-                    return ApiResponse<EventResponse>.FailureResponse(new List<string> { "User not found" });
+                    return ApiResponse<EventResponse>.FailureResponse(["User not found"]);
 
                 // Map request to entity
                 var eventEntity = _mapper.Map<Event>(newEvent);
@@ -129,7 +133,7 @@ namespace Ticketing.Application.Services
             catch (Exception ex)
             {                
                 return ApiResponse<EventResponse>.FailureResponse(
-                    new List<string> {ex.Message, "An error occurred while creating the event. Please try again." }
+                    [ex.Message, "An error occurred while creating the event. Please try again."]
                 );
             }
         }
@@ -159,7 +163,7 @@ namespace Ticketing.Application.Services
                 );
 
                 if (eventEntity == null)
-                    return ApiResponse<EventResponse>.FailureResponse(new List<string> { "Event not found" });
+                    return ApiResponse<EventResponse>.FailureResponse(["Event not found"]);
 
                 var eventResponse = _mapper.Map<EventResponse>(eventEntity);
                 return ApiResponse<EventResponse>.SuccessResponse(eventResponse, "Event retrieved successfully");
@@ -167,7 +171,7 @@ namespace Ticketing.Application.Services
             catch (Exception ex)
             {
                 return ApiResponse<EventResponse>.FailureResponse(
-                    new List<string> { ex.Message, "An error occurred while retrieving the event." }
+                    [ex.Message, "An error occurred while retrieving the event."]
                 );
             }
         }
@@ -180,9 +184,10 @@ namespace Ticketing.Application.Services
         {
             try
             {
-                Expression<Func<Event, bool>>? filter = includeInactive ? null : e => e.IsActive;
+                Expression<Func<Event, bool>>? filter = includeInactive ? null : e => e.IsActive == true;
 
                 var events = await _unitOfWork.Events.GetAll(
+                    expression: filter,
                     includes: ["TicketTypes", "Creator"],
                     orderBy: q => q.OrderByDescending(e => e.CreatedAt)
                 );
@@ -203,7 +208,7 @@ namespace Ticketing.Application.Services
             catch (Exception ex)
             {
                 return ApiResponse<IEnumerable<EventResponse>>.FailureResponse(
-                    new List<string> { ex.Message, "An error occurred while retrieving events." }
+                    [ex.Message, "An error occurred while retrieving events."]
                 );
             }
         }
@@ -212,7 +217,7 @@ namespace Ticketing.Application.Services
         public async Task<ApiResponse<EventResponse>> UpdateEvent(long eventId, EventUpdateRequest updatedEvent)
         {
             if (updatedEvent is null)
-                return ApiResponse<EventResponse>.FailureResponse(new List<string> { "Event data is null" });
+                return ApiResponse<EventResponse>.FailureResponse(["Event data is null"]);
 
             var errors = new List<string>();
 
@@ -224,7 +229,7 @@ namespace Ticketing.Application.Services
                 );
 
                 if (existingEvent == null)
-                    return ApiResponse<EventResponse>.FailureResponse(new List<string> { "Event not found" });
+                    return ApiResponse<EventResponse>.FailureResponse(["Event not found"]);
 
                 // Validation - only validate fields that are being updated (not null)
                 if (updatedEvent.EventTitle != null && string.IsNullOrWhiteSpace(updatedEvent.EventTitle))
@@ -278,7 +283,7 @@ namespace Ticketing.Application.Services
             catch (Exception ex)
             {
                 return ApiResponse<EventResponse>.FailureResponse(
-                    new List<string> { ex.Message, "An error occurred while updating the event." }
+                    [ex.Message, "An error occurred while updating the event."]
                 );
             }
         }
@@ -287,7 +292,7 @@ namespace Ticketing.Application.Services
         public async Task<ApiResponse<List<TicketTypeResponse>>> AddTicketTypes(long eventId, List<TicketTypeRequest> ticketTypes)
         {
             if (ticketTypes == null || !ticketTypes.Any())
-                return ApiResponse<List<TicketTypeResponse>>.FailureResponse(new List<string> { "At least one ticket type is required" });
+                return ApiResponse<List<TicketTypeResponse>>.FailureResponse(["At least one ticket type is required"]);
 
             var errors = new List<string>();
 
@@ -299,7 +304,7 @@ namespace Ticketing.Application.Services
                 );
 
                 if (existingEvent == null)
-                    return ApiResponse<List<TicketTypeResponse>>.FailureResponse(new List<string> { "Event not found" });
+                    return ApiResponse<List<TicketTypeResponse>>.FailureResponse(["Event not found"]);
 
                 // Validation
                 for (int i = 0; i < ticketTypes.Count; i++)
@@ -360,7 +365,31 @@ namespace Ticketing.Application.Services
             catch (Exception ex)
             {
                 return ApiResponse<List<TicketTypeResponse>>.FailureResponse(
-                    new List<string> { ex.Message, "An error occurred while adding ticket types." }
+                    [ex.Message, "An error occurred while adding ticket types."]
+                );
+            }
+        }
+
+        //Get Event TicketTypes
+        public async Task<ApiResponse<List<TicketTypeResponse>>> GetEventTicketTypes(long eventId)
+        {
+            try
+            {
+                var existingEvent = await _unitOfWork.Events.Get(
+                    e => e.Id == eventId,
+                    includes: ["TicketTypes"]
+                );
+
+                if (existingEvent == null)
+                    return ApiResponse<List<TicketTypeResponse>>.FailureResponse(["Event not found"]);
+
+                var ticketResponses = _mapper.Map<List<TicketTypeResponse>>(existingEvent.TicketTypes);
+                return ApiResponse<List<TicketTypeResponse>>.SuccessResponse(ticketResponses, "Ticket types retrieved successfully");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<List<TicketTypeResponse>>.FailureResponse(
+                    [ex.Message, "An error occurred while retrieving ticket types."]
                 );
             }
         }
@@ -369,7 +398,7 @@ namespace Ticketing.Application.Services
         public async Task<ApiResponse<TicketTypeResponse>> UpdateTicketType(long eventId, long ticketTypeId, TicketTypeRequest ticketType)
         {
             if (ticketType is null)
-                return ApiResponse<TicketTypeResponse>.FailureResponse(new List<string> { "Ticket type data is null" });
+                return ApiResponse<TicketTypeResponse>.FailureResponse(["Ticket type data is null"]);
 
             var errors = new List<string>();
 
@@ -394,12 +423,12 @@ namespace Ticketing.Application.Services
                 );
 
                 if (existingEvent == null)
-                    return ApiResponse<TicketTypeResponse>.FailureResponse(new List<string> { "Event not found" });
+                    return ApiResponse<TicketTypeResponse>.FailureResponse(["Event not found"]);
 
                 var existingTicket = existingEvent.TicketTypes?.FirstOrDefault(t => t.Id == ticketTypeId);
 
                 if (existingTicket == null)
-                    return ApiResponse<TicketTypeResponse>.FailureResponse(new List<string> { "Ticket type not found" });
+                    return ApiResponse<TicketTypeResponse>.FailureResponse(["Ticket type not found"]);
 
                 // Check if the new type name conflicts with other existing tickets
                 var conflictingTicket = existingEvent.TicketTypes?
@@ -408,7 +437,7 @@ namespace Ticketing.Application.Services
 
                 if (conflictingTicket != null)
                     return ApiResponse<TicketTypeResponse>.FailureResponse(
-                        new List<string> { $"Ticket type '{ticketType.Type}' already exists for this event" });
+                        [$"Ticket type '{ticketType.Type}' already exists for this event"]);
 
                 // Update ticket properties
                 existingTicket.Type = ticketType.Type?.Trim();
@@ -424,7 +453,7 @@ namespace Ticketing.Application.Services
             catch (Exception ex)
             {
                 return ApiResponse<TicketTypeResponse>.FailureResponse(
-                    new List<string> { ex.Message, "An error occurred while updating the ticket type." }
+                    [ex.Message, "An error occurred while updating the ticket type."]
                 );
             }
         }
@@ -440,17 +469,17 @@ namespace Ticketing.Application.Services
                 );
 
                 if (existingEvent == null)
-                    return ApiResponse<bool>.FailureResponse(new List<string> { "Event not found" });
+                    return ApiResponse<bool>.FailureResponse(["Event not found"]);
 
                 var existingTicket = existingEvent.TicketTypes?.FirstOrDefault(t => t.Id == ticketTypeId);
 
                 if (existingTicket == null)
-                    return ApiResponse<bool>.FailureResponse(new List<string> { "Ticket type not found" });
+                    return ApiResponse<bool>.FailureResponse(["Ticket type not found"]);
 
                 // Check if this is the last ticket type
                 if (existingEvent.TicketTypes?.Count == 1)
                     return ApiResponse<bool>.FailureResponse(
-                        new List<string> { "Cannot delete the last ticket type. An event must have at least one ticket type." });
+                        ["Cannot delete the last ticket type. An event must have at least one ticket type."]);
 
                 // Optional: Check if there are any bookings for this ticket type
                 // If you have a Bookings table, you might want to prevent deletion if bookings exist
@@ -467,7 +496,7 @@ namespace Ticketing.Application.Services
             catch (Exception ex)
             {
                 return ApiResponse<bool>.FailureResponse(
-                    new List<string> { ex.Message, "An error occurred while deleting the ticket type." }
+                    [ex.Message, "An error occurred while deleting the ticket type."]
                 );
             }
         }
@@ -483,7 +512,7 @@ namespace Ticketing.Application.Services
                 );
 
                 if (existingEvent == null)
-                    return ApiResponse<bool>.FailureResponse(new List<string> { "Event not found" });
+                    return ApiResponse<bool>.FailureResponse(["Event not found"]);
 
                 // Delete ticket types first (if not configured for cascade delete)
                 if (existingEvent.TicketTypes != null && existingEvent.TicketTypes.Any())
@@ -499,7 +528,7 @@ namespace Ticketing.Application.Services
             catch (Exception ex)
             {
                 return ApiResponse<bool>.FailureResponse(
-                    new List<string> { ex.Message, "An error occurred while deleting the event." }
+                    [ex.Message, "An error occurred while deleting the event."]
                 );
             }
         }
@@ -515,10 +544,10 @@ namespace Ticketing.Application.Services
                 );
 
                 if (existingEvent == null)
-                    return ApiResponse<EventResponse>.FailureResponse(new List<string> { "Event not found" });
+                    return ApiResponse<EventResponse>.FailureResponse(["Event not found"]);
 
                 if (!existingEvent.IsActive)
-                    return ApiResponse<EventResponse>.FailureResponse(new List<string> { "Event is already inactive" });
+                    return ApiResponse<EventResponse>.FailureResponse(["Event is already inactive"]);
 
                 existingEvent.IsActive = false;
                 existingEvent.UpdatedAt = DateTime.UtcNow;
@@ -532,7 +561,7 @@ namespace Ticketing.Application.Services
             catch (Exception ex)
             {
                 return ApiResponse<EventResponse>.FailureResponse(
-                    new List<string> { ex.Message, "An error occurred while deactivating the event." }
+                    [ex.Message, "An error occurred while deactivating the event."]
                 );
             }
         }
@@ -548,10 +577,10 @@ namespace Ticketing.Application.Services
                 );
 
                 if (existingEvent == null)
-                    return ApiResponse<EventResponse>.FailureResponse(new List<string> { "Event not found" });
+                    return ApiResponse<EventResponse>.FailureResponse(["Event not found"]);
 
                 if (existingEvent.IsActive)
-                    return ApiResponse<EventResponse>.FailureResponse(new List<string> { "Event is already active" });
+                    return ApiResponse<EventResponse>.FailureResponse(["Event is already active"]);
 
                 existingEvent.IsActive = true;
                 existingEvent.UpdatedAt = DateTime.UtcNow;
@@ -565,11 +594,253 @@ namespace Ticketing.Application.Services
             catch (Exception ex)
             {
                 return ApiResponse<EventResponse>.FailureResponse(
-                    new List<string> { ex.Message, "An error occurred while reactivating the event." }
+                    [ex.Message, "An error occurred while reactivating the event."]
                 );
             }
         }
 
+        public async Task<ApiResponse<TicketResponse>> AddTicket(TicketRequest ticket)
+        {
+            if (ticket is null)
+                return ApiResponse<TicketResponse>.FailureResponse(["Ticket is null"]);
+
+            try
+            {
+                // Check if TicketType exists 
+                var ticketType = await _unitOfWork.TicketTypes.GetWithTracking(tt => tt.Id == ticket.TicketTypeId);
+                if (ticketType == null)
+                    return ApiResponse<TicketResponse>.FailureResponse(["TicketType not found"]);
+
+                if (ticketType.QuantityAvailable < 1)
+                    return ApiResponse<TicketResponse>.FailureResponse(["TicketType Sold Out"]);
+                if (ticket.Quantity < 1)
+                    return ApiResponse<TicketResponse>.FailureResponse(["Quantity must be at least 1"]);
+                if (ticket.Quantity > ticketType.QuantityAvailable)
+                    return ApiResponse<TicketResponse>.FailureResponse(
+                        [$"Only {ticketType.QuantityAvailable} tickets are available for this TicketType"]
+                    );
+
+                // Check if user exists
+                var user = await _unitOfWork.Users.Get(u => u.Id == ticket.UserId);
+                if (user == null)
+                    return ApiResponse<TicketResponse>.FailureResponse(["User not found"]);
+
+                // Create multiple ticket entities based on quantity
+                var purchaseTime = DateTime.UtcNow;
+                var ticketEntities = new List<Ticket>();
+                
+                for (int i = 0; i < ticket.Quantity; i++)
+                {
+                    var ticketEntity = _mapper.Map<Ticket>(ticket);
+                    ticketEntity.PurchaseTime = purchaseTime;
+                    ticketEntities.Add(ticketEntity);
+                }
+
+                // Insert all tickets at once using InsertRange
+                await _unitOfWork.Tickets.InsertRange(ticketEntities);
+
+                // Decrease available quantity
+                ticketType.QuantityAvailable -= ticket.Quantity;
+
+                await _unitOfWork.Save();
+
+                // Map first ticket to response and include quantity purchased
+                var ticketResponse = _mapper.Map<TicketResponse>(ticketEntities.First());
+                ticketResponse.Quantity = ticket.Quantity;
+
+                return ApiResponse<TicketResponse>.SuccessResponse(
+                    ticketResponse, 
+                    $"{ticket.Quantity} ticket(s) added successfully"
+                );
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<TicketResponse>.FailureResponse(
+                    [ex.Message, "An error occurred while creating the ticket. Please try again."]
+                );
+            }
+        }
+
+        public async Task<ApiResponse<TicketResponse>> GetTicketById(Guid ticketId)
+        {
+            try
+            {
+                var ticket = await _unitOfWork.Tickets.Get(
+                t => t.TicketId == ticketId,
+                includes: ["User", "TicketType", "TicketType.Event"]);
+
+                if (ticket is null)
+                    return ApiResponse<TicketResponse>.FailureResponse(["Ticket not found"]);
+
+                 var ticketResponse = _mapper.Map<TicketResponse>(ticket);
+                 ticketResponse.Quantity = 1; // Since we're fetching a single ticket
+
+                 return ApiResponse<TicketResponse>.SuccessResponse(ticketResponse, "Ticket retrieved successfully");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<TicketResponse>.FailureResponse(
+                    [ex.Message, "An error occurred while retrieving the ticket. Please try again."]
+                );
+            }
+        }
+
+        public async Task<ApiResponse<PageResponse<TicketResponse>>> GetUserTickets(
+            Guid userId,
+            PaginationFilter paginationFilter,
+            bool includeInactive = false
+        )
+        {
+            try
+            {
+                var tickets = await _unitOfWork.Tickets.GetAll(
+                    t => t.UserId == userId,
+                    includes: ["User", "TicketType", "TicketType.Event"],
+                    orderBy: q => q.OrderByDescending(e => e.PurchaseTime)
+                );
+
+                // Apply filters in-memory
+                if (!includeInactive)
+                {
+                    tickets = tickets.Where(t => t.IsActive).ToList();
+                }
+
+                if (!string.IsNullOrWhiteSpace(paginationFilter.Search))
+                {
+                    tickets = tickets.Where(t => 
+                        t.TicketType?.Event?.EventTitle?.Contains(
+                            paginationFilter.Search, 
+                            StringComparison.OrdinalIgnoreCase) == true
+                    ).ToList();
+                }
+
+                if (tickets == null || !tickets.Any())
+                {
+                    var emptyMeta = new Meta(0, paginationFilter.PageNumber, paginationFilter.PageSize);
+                    var emptyResponse = new PageResponse<TicketResponse>(
+                        // Enumerable.Empty<TicketResponse>(), 
+                        [],// alternative to line above
+                        emptyMeta
+                    );
+                    
+                    return ApiResponse<PageResponse<TicketResponse>>.SuccessResponse(
+                        emptyResponse,
+                        "No tickets found"
+                    );
+                }
+
+                var totalCount = tickets.Count;
+                
+                // Apply pagination
+                var paginatedTickets = tickets
+                    .Skip((paginationFilter.PageNumber - 1) * paginationFilter.PageSize)
+                    .Take(paginationFilter.PageSize)
+                    .ToList();
+
+                var ticketResponses = _mapper.Map<IEnumerable<TicketResponse>>(paginatedTickets);
+
+                // Set quantity for each ticket
+                foreach (var ticket in ticketResponses)
+                {
+                    ticket.Quantity = 1;
+                }
+
+                // Create pagination metadata
+                var meta = new Meta(totalCount, paginationFilter.PageNumber, paginationFilter.PageSize);
+                
+                // Create paginated response
+                var pageResponse = new PageResponse<TicketResponse>(ticketResponses, meta);
+
+                return ApiResponse<PageResponse<TicketResponse>>.SuccessResponse(
+                    pageResponse,
+                    $"Retrieved {paginatedTickets.Count} of {totalCount} tickets"
+                );
+            }
+            catch (Exception ex)
+            {
+                // Log the exception here if you have logging
+                return ApiResponse<PageResponse<TicketResponse>>.FailureResponse(
+                    ["An error occurred while retrieving tickets. Please try again.", ex.Message]
+                );
+            }
+        }
+        public async Task<ApiResponse<PageResponse<TicketResponse>>> GetAllTickets(
+            PaginationFilter paginationFilter,
+            bool includeInactive = false
+        )
+        {
+            try
+            {
+                var tickets = await _unitOfWork.Tickets.GetAll(
+                    includes: ["User", "TicketType", "TicketType.Event"],
+                    orderBy: q => q.OrderByDescending(e => e.PurchaseTime)
+                );
+
+                // Apply filters in-memory
+                if (!includeInactive)
+                {
+                    tickets = tickets.Where(t => t.IsActive).ToList();
+                }
+
+                if (!string.IsNullOrWhiteSpace(paginationFilter.Search))
+                {
+                    tickets = tickets.Where(t => 
+                        t.TicketType?.Event?.EventTitle?.Contains(
+                            paginationFilter.Search, 
+                            StringComparison.OrdinalIgnoreCase) == true
+                    ).ToList();
+                }
+
+                if (tickets == null || !tickets.Any())
+                {
+                    var emptyMeta = new Meta(0, paginationFilter.PageNumber, paginationFilter.PageSize);
+                    var emptyResponse = new PageResponse<TicketResponse>(
+                        // Enumerable.Empty<TicketResponse>(), 
+                        [],// alternative to line above
+                        emptyMeta
+                    );
+                    
+                    return ApiResponse<PageResponse<TicketResponse>>.SuccessResponse(
+                        emptyResponse,
+                        "No tickets found"
+                    );
+                }
+
+                var totalCount = tickets.Count;
+                
+                // Apply pagination
+                var paginatedTickets = tickets
+                    .Skip((paginationFilter.PageNumber - 1) * paginationFilter.PageSize)
+                    .Take(paginationFilter.PageSize)
+                    .ToList();
+
+                var ticketResponses = _mapper.Map<IEnumerable<TicketResponse>>(paginatedTickets);
+
+                // Set quantity for each ticket
+                foreach (var ticket in ticketResponses)
+                {
+                    ticket.Quantity = 1;
+                }
+
+                // Create pagination metadata
+                var meta = new Meta(totalCount, paginationFilter.PageNumber, paginationFilter.PageSize);
+                
+                // Create paginated response
+                var pageResponse = new PageResponse<TicketResponse>(ticketResponses, meta);
+
+                return ApiResponse<PageResponse<TicketResponse>>.SuccessResponse(
+                    pageResponse,
+                    $"Retrieved {paginatedTickets.Count} of {totalCount} tickets"
+                );
+            }
+            catch (Exception ex)
+            {
+                // Log the exception here if you have logging
+                return ApiResponse<PageResponse<TicketResponse>>.FailureResponse(
+                    ["An error occurred while retrieving tickets. Please try again.", ex.Message]
+                );
+            }
+        }
 
     }
 }

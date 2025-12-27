@@ -29,7 +29,20 @@ namespace Ticketing.Api.Configurations
             CreateMap<TicketTypeRequest, TicketType>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
                 .ForMember(dest => dest.EventId, opt => opt.Ignore())
-                .ForMember(dest => dest.Event, opt => opt.Ignore());
+                .ForMember(dest => dest.Event, opt => opt.Ignore())
+                .ReverseMap();
+            CreateMap<TicketTypeResponse, TicketType>().ReverseMap();
+            CreateMap<TicketRequest, Ticket>().ReverseMap();
+            CreateMap<TicketRequest, TicketResponse>().ReverseMap();
+            CreateMap<Ticket, TicketResponse>()
+                .ForMember(dest => dest.UserFirstName, opt => opt.MapFrom(src => src.User.FirstName))
+                .ForMember(dest => dest.UserLastName, opt => opt.MapFrom(src => src.User.LastName))
+                .ForMember(dest => dest.TicketType, opt => opt.MapFrom(src => src.TicketType.Type))
+                .ForMember(dest => dest.TicketPrice, opt => opt.MapFrom(src => src.TicketType.Price))
+                .ForMember(dest => dest.EventId, opt => opt.MapFrom(src => src.TicketType.Event.Id))
+                .ForMember(dest => dest.EventTitle, opt => opt.MapFrom(src => src.TicketType.Event.EventTitle))
+                .ForMember(dest => dest.EventTime, opt => opt.MapFrom(src => src.TicketType.Event.EventTime))
+                .ReverseMap();
         }
     }
 }

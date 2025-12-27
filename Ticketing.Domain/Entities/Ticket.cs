@@ -11,6 +11,7 @@ namespace Ticketing.Domain.Entities
         public Guid? UserId { get; set; }
         public User? User { get; set; }
         public DateTime PurchaseTime { get; set; }
+        public bool IsActive { get; set; } = true;
 
     }
 

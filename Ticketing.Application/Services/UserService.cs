@@ -30,17 +30,17 @@ namespace Ticketing.Application.Services
         {
             if (request == null)
             {
-                return ApiResponse<UserResponse>.FailureResponse(new List<string> { "Invalid User Data." });
+                return ApiResponse<UserResponse>.FailureResponse(["Invalid User Data."]);
             }
             if (string.IsNullOrWhiteSpace(request.FirstName) ||
                 string.IsNullOrWhiteSpace(request.LastName) ||
                 string.IsNullOrWhiteSpace(request.Email) ||
                 string.IsNullOrWhiteSpace(request.Password))
             {
-                return ApiResponse<UserResponse>.FailureResponse(new List<string> { "All fields are required." });
+                return ApiResponse<UserResponse>.FailureResponse(["All fields are required."]);
             }
             if (!IsValidEmail(request.Email))
-                return ApiResponse<UserResponse>.FailureResponse(new List<string> { "Invalid email format." });
+                return ApiResponse<UserResponse>.FailureResponse(["Invalid email format."]);
                 
             var validationErrors = ValidatePassword(request.Password);
             if (validationErrors.Count > 0)
@@ -51,7 +51,7 @@ namespace Ticketing.Application.Services
 
             if (existingUser != null)
             {
-                return ApiResponse<UserResponse>.FailureResponse(new List<string> { "Email already in use." });
+                return ApiResponse<UserResponse>.FailureResponse(["Email already in use."]);
             }
 
             var userEntity = _mapper.Map<User>(request);
@@ -82,7 +82,7 @@ namespace Ticketing.Application.Services
         {
             var user = await _unitOfWork.Users.Get(u => u.Id == userId, includes: ["Role"]);
             if (user == null)
-                return ApiResponse<UserResponse>.FailureResponse(new List<string> { "User not found." });
+                return ApiResponse<UserResponse>.FailureResponse(["User not found."]);
 
             var response = _mapper.Map<UserResponse>(user);
             return ApiResponse<UserResponse>.SuccessResponse(response);
@@ -92,7 +92,7 @@ namespace Ticketing.Application.Services
         {
             var user = await _unitOfWork.Users.Get(u => u.Email == email, includes: ["Role"]);
             if (user == null)
-                return ApiResponse<UserResponse>.FailureResponse(new List<string> { "User not found." });
+                return ApiResponse<UserResponse>.FailureResponse(["User not found."]);
 
             var response = _mapper.Map<UserResponse>(user);
             return ApiResponse<UserResponse>.SuccessResponse(response);
@@ -108,16 +108,16 @@ namespace Ticketing.Application.Services
         public async Task<ApiResponse<LoginResponse>> LoginUserAsync(LoginRequest request)
         {
             if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
-                return ApiResponse<LoginResponse>.FailureResponse(new List<string> { "Email and password are required." });
+                return ApiResponse<LoginResponse>.FailureResponse(["Email and password are required."]);
 
             var user = await _unitOfWork.Users.Get(u => u.Email == request.Email, includes: ["Role"]);
             if (user == null)
-                return ApiResponse<LoginResponse>.FailureResponse(new List<string> { "Invalid email or password." });
+                return ApiResponse<LoginResponse>.FailureResponse(["Invalid email or password."]);
 
             // Verify password using BCrypt
             bool isValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
             if (!isValid)
-                return ApiResponse<LoginResponse>.FailureResponse(new List<string> { "Invalid email or password." });
+                return ApiResponse<LoginResponse>.FailureResponse(["Invalid email or password."]);
 
             var token = GenerateJwt(user);
             var response = _mapper.Map<LoginResponse>(user);
@@ -129,13 +129,32 @@ namespace Ticketing.Application.Services
         {
             var user = await _unitOfWork.Users.Get(u => u.Id == userId);
             if (user == null)
-                return ApiResponse<UserResponse>.FailureResponse(new List<string> { "User not found." });
+                return ApiResponse<UserResponse>.FailureResponse(["User not found."]);
 
-            // Update properties
-            user.FirstName = request.FirstName ?? user.FirstName;
-            user.LastName = request.LastName ?? user.LastName;
-            user.Email = request.Email ?? user.Email;
-            user.PhoneNumber = request.PhoneNumber ?? user.PhoneNumber;
+            var errors = new List<string>();
+
+            // Validation - only validate fields that are being updated (not null)
+            if (request.FirstName != null && string.IsNullOrWhiteSpace(request.FirstName))
+                errors.Add("First name cannot be empty");
+            if (request.LastName != null && string.IsNullOrWhiteSpace(request.LastName))
+                errors.Add("Last name cannot be empty");
+            if (request.Email != null && string.IsNullOrWhiteSpace(request.Email))
+                errors.Add("Email cannot be empty");
+            if (request.PhoneNumber != null && string.IsNullOrWhiteSpace(request.PhoneNumber))
+                errors.Add("Phone number cannot be empty");
+
+            if (errors.Count == 0)
+                    return ApiResponse<UserResponse>.FailureResponse(errors);
+
+            // Update only non-null properties
+            if (!string.IsNullOrWhiteSpace(request.FirstName))
+                user.FirstName = request.FirstName;
+            if (!string.IsNullOrWhiteSpace(request.LastName))
+                user.LastName = request.LastName;
+            if (!string.IsNullOrWhiteSpace(request.Email))
+                user.Email = request.Email;
+            if (!string.IsNullOrWhiteSpace(request.PhoneNumber))
+                user.PhoneNumber = request.PhoneNumber;
 
             _unitOfWork.Users.Update(user);
             await _unitOfWork.Save();
@@ -148,7 +167,7 @@ namespace Ticketing.Application.Services
         {
             var user = await _unitOfWork.Users.Get(u => u.Id == userId);
             if (user == null)
-                return ApiResponse<UserResponse>.FailureResponse(new List<string> { "User not found." });
+                return ApiResponse<UserResponse>.FailureResponse(["User not found."]);
 
             user.RoleId = request.RoleId != Guid.Empty ? request.RoleId : user.RoleId;
 
@@ -163,7 +182,7 @@ namespace Ticketing.Application.Services
         {
             var user = await _unitOfWork.Users.Get(u => u.Id == userId);
             if (user == null)
-                return ApiResponse<string>.FailureResponse(new List<string> { "User not found." });
+                return ApiResponse<string>.FailureResponse(["User not found."]);
 
             await _unitOfWork.Users.DeleteGuid(user.Id);
             await _unitOfWork.Save();
@@ -187,6 +206,8 @@ namespace Ticketing.Application.Services
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var token = new JwtSecurityToken(
+                issuer: _config["Jwt:Issuer"],
+                audience: _config["Jwt:Audience"], 
                 claims: claims,
                 expires: DateTime.UtcNow.AddHours(2),
                 signingCredentials: creds);
