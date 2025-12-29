@@ -10,8 +10,8 @@ namespace Ticketing.Domain.Entities
         public required string OrganizerEmail { get; set; }
         public string? OrganizerPhoneNo { get; set; }
         public required string Location { get; set; }
-        public required DateOnly EventDate { get; set; }
-        public required string EventTime { get; set; }
+        public required DateTime EventDateTime { get; set; }
+        // public required string EventTime { get; set; }
         public EventType EventType { get; set; } //online or physical
         public required Guid CreatedBy { get; set; }
         [ForeignKey(nameof(CreatedBy))]

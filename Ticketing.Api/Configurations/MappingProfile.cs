@@ -41,7 +41,7 @@ namespace Ticketing.Api.Configurations
                 .ForMember(dest => dest.TicketPrice, opt => opt.MapFrom(src => src.TicketType.Price))
                 .ForMember(dest => dest.EventId, opt => opt.MapFrom(src => src.TicketType.Event.Id))
                 .ForMember(dest => dest.EventTitle, opt => opt.MapFrom(src => src.TicketType.Event.EventTitle))
-                .ForMember(dest => dest.EventTime, opt => opt.MapFrom(src => src.TicketType.Event.EventTime))
+                .ForMember(dest => dest.EventDateTime, opt => opt.MapFrom(src => src.TicketType.Event.EventDateTime))
                 .ReverseMap();
         }
     }

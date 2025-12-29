@@ -50,11 +50,11 @@ namespace Ticketing.Application.Services
             if (string.IsNullOrWhiteSpace(newEvent.Location))
                 errors.Add("Location is required");
 
-            if (newEvent.EventDate < DateOnly.FromDateTime(DateTime.UtcNow))
+            if (newEvent.EventDateTime < DateTime.UtcNow)
                 errors.Add("Event date cannot be in the past");
 
-            if (string.IsNullOrWhiteSpace(newEvent.EventTime))
-                errors.Add("Event time is required");
+            // if (string.IsNullOrWhiteSpace(newEvent.EventTime))
+            //     errors.Add("Event time is required");
 
             if (!Enum.IsDefined(typeof(EventType), newEvent.EventType))
             {
@@ -241,11 +241,11 @@ namespace Ticketing.Application.Services
                 if (updatedEvent.Location != null && string.IsNullOrWhiteSpace(updatedEvent.Location))
                     errors.Add("Location cannot be empty");
 
-                if (updatedEvent.EventDate.HasValue && updatedEvent.EventDate.Value < DateOnly.FromDateTime(DateTime.UtcNow))
+                if (updatedEvent.EventDateTime.HasValue && updatedEvent.EventDateTime.Value < DateTime.UtcNow)
                     errors.Add("Event date cannot be in the past");
 
-                if (updatedEvent.EventTime != null && string.IsNullOrWhiteSpace(updatedEvent.EventTime))
-                    errors.Add("Event time cannot be empty");
+                // if (updatedEvent.EventTime != null && string.IsNullOrWhiteSpace(updatedEvent.EventTime))
+                //     errors.Add("Event time cannot be empty");
 
                 if (updatedEvent.EventType.HasValue && !Enum.IsDefined(typeof(EventType), updatedEvent.EventType.Value))
                     errors.Add("Invalid event type");
@@ -263,11 +263,11 @@ namespace Ticketing.Application.Services
                 if (!string.IsNullOrWhiteSpace(updatedEvent.Location))
                     existingEvent.Location = updatedEvent.Location;
 
-                if (updatedEvent.EventDate.HasValue)
-                    existingEvent.EventDate = updatedEvent.EventDate.Value;
+                if (updatedEvent.EventDateTime.HasValue)
+                    existingEvent.EventDateTime = updatedEvent.EventDateTime.Value;
 
-                if (!string.IsNullOrWhiteSpace(updatedEvent.EventTime))
-                    existingEvent.EventTime = updatedEvent.EventTime;
+                // if (!string.IsNullOrWhiteSpace(updatedEvent.EventTime))
+                //     existingEvent.EventTime = updatedEvent.EventTime;
 
                 if (updatedEvent.EventType.HasValue)
                     existingEvent.EventType = updatedEvent.EventType.Value;

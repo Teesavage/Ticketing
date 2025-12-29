@@ -10,8 +10,7 @@ namespace Ticketing.Application.DTOs.Requests
         // public required string OrganizerEmail { get; set; }
         // public string? OrganizerPhoneNo { get; set; }
         public required string Location { get; set; }
-        public DateOnly? EventDate { get; set; }
-        public string? EventTime { get; set; }
+        public DateTime? EventDateTime { get; set; }
         public EventType? EventType { get; set; } //online or physical
         // public required IList<TicketType> TicketTypes { get; set; }
         public required List<TicketTypeRequest> TicketTypes { get; set; }
@@ -24,8 +23,7 @@ namespace Ticketing.Application.DTOs.Requests
         public string? EventTitle { get; set; }
         public string? EventDescription { get; set; }
         public string? Location { get; set; }
-        public DateOnly? EventDate { get; set; }
-        public string? EventTime { get; set; }
+        public DateTime? EventDateTime { get; set; }
         public EventType? EventType { get; set; }
     }
 

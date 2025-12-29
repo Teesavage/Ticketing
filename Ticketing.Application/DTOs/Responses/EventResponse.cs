@@ -11,8 +11,7 @@ namespace Ticketing.Application.DTOs.Responses
         public required string OrganizerEmail { get; set; }
         public string? OrganizerPhoneNo { get; set; }
         public required string Location { get; set; }
-        public required DateOnly EventDate { get; set; }
-        public required string EventTime { get; set; }
+        public required DateTime EventDateTime { get; set; }
         public EventType EventType { get; set; } //online or physical
         public string? EventTypeName { get; set; }
         public Guid CreatedBy { get; set; }
@@ -42,7 +41,7 @@ namespace Ticketing.Application.DTOs.Responses
         public decimal TicketPrice { get; set; }
         public long? EventId { get; set; }
         public string? EventTitle { get; set; }
-        public string? EventTime { get; set; }
+        public DateTime? EventDateTime { get; set; }
         public DateTime PurchaseTime { get; set; }
         public int Quantity { get; set; }
         public bool IsActive { get; set; }
