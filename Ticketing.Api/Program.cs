@@ -85,6 +85,8 @@ builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddScoped<IStateService, StateService>();
+builder.Services.AddScoped<ICountryService, CountryService>();
 builder.Services.AddScoped<ILocationCacheService, LocationCacheService>();
 
 // JWT Authentication
