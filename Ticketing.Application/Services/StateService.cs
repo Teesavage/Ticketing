@@ -249,7 +249,7 @@ namespace Ticketing.Application.Services
                 return ApiResponse<IEnumerable<StateResponse>>.FailureResponse(["Country not found."]);
             }
 
-            var states = await _unitOfWork.States.GetAll(s => s.CountryId == countryId);
+            var states = await _unitOfWork.States.GetAll(s => s.CountryId == countryId, includes: ["Country"]);
             var response = _mapper.Map<IEnumerable<StateResponse>>(states);
             
             return ApiResponse<IEnumerable<StateResponse>>.SuccessResponse(response);
