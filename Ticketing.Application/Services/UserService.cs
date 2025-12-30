@@ -10,6 +10,7 @@ using System.Text;
 using Microsoft.Extensions.Configuration;
 using System.IdentityModel.Tokens.Jwt;
 using Ticketing.Application.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace Ticketing.Application.Services
 {
@@ -18,12 +19,14 @@ namespace Ticketing.Application.Services
         private readonly IMapper _mapper;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IConfiguration _config;
+        private readonly ILogger<EventService> _logger;
 
-        public UserService(IMapper mapper, IUnitOfWork unitOfWork, IConfiguration config)
+        public UserService(IMapper mapper, IUnitOfWork unitOfWork, IConfiguration config, ILogger<EventService> logger)
         {
             _mapper = mapper;
             _unitOfWork = unitOfWork;
             _config = config;
+            _logger = logger;
         }
 
         public async Task<ApiResponse<UserResponse>> RegisterUserAsync(UserRequest request)
@@ -122,6 +125,8 @@ namespace Ticketing.Application.Services
             var token = GenerateJwt(user);
             var response = _mapper.Map<LoginResponse>(user);
             response.Token = token;
+
+            _logger.LogInformation($"User {user.Id} logged in at {DateTime.UtcNow}");
             return ApiResponse<LoginResponse>.SuccessResponse(response, "Login successful.");
         }
 

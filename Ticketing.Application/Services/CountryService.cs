@@ -1,4 +1,5 @@
 using AutoMapper;
+using Microsoft.Extensions.Logging;
 using Ticketing.Application.DTOs.Requests;
 using Ticketing.Application.DTOs.Responses;
 using Ticketing.Application.Interfaces;
@@ -12,11 +13,13 @@ namespace Ticketing.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly ILogger<EventService> _logger;
 
-        public CountryService(IUnitOfWork unitOfWork, IMapper mapper)
+        public CountryService(IUnitOfWork unitOfWork, IMapper mapper, ILogger<EventService> logger)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _logger = logger;
         }
 
         // Get all countries

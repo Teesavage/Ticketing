@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using AutoMapper;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Identity.Client;
 using Ticketing.Application.CacheInterfaces;
 using Ticketing.Application.DTOs.Requests;
@@ -20,13 +21,15 @@ namespace Ticketing.Application.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IConfiguration _config;
         private readonly ILocationCacheService _locationCacheService;
+        private readonly ILogger<EventService> _logger;
 
-        public EventService(IMapper mapper, IUnitOfWork unitOfWork, IConfiguration config, ILocationCacheService locationCacheService)
+        public EventService(IMapper mapper, IUnitOfWork unitOfWork, IConfiguration config, ILocationCacheService locationCacheService, ILogger<EventService> logger)
         {
             _mapper = mapper;
             _unitOfWork = unitOfWork;
             _config = config;
             _locationCacheService = locationCacheService;
+            _logger = logger;
         }
 
         #pragma warning disable CS8604 // Possible null reference argument.
