@@ -9,6 +9,12 @@ namespace Ticketing.Domain.Entities
         public required string EventDescription { get; set; }
         public required string OrganizerEmail { get; set; }
         public string? OrganizerPhoneNo { get; set; }
+        public int? CountryId { get; set; }
+        [ForeignKey(nameof(CountryId))]
+        public Country? Country { get; set; }
+        public int? StateId { get; set; }
+        [ForeignKey(nameof(StateId))]
+        public State? State { get; set; }
         public required string Location { get; set; }
         public required DateTime EventDateTime { get; set; }
         // public required string EventTime { get; set; }

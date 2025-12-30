@@ -10,6 +10,8 @@ namespace Ticketing.Infrastructure.IRespository
         IGenericRepository<Event> Events { get; }
         IGenericRepository<Ticket> Tickets { get; }
         IGenericRepository<TicketType> TicketTypes { get; }
+        IGenericRepository<Country> Countries { get; }
+        IGenericRepository<State> States { get; }
 
         Task Save();
         void ClearChangeTracker();

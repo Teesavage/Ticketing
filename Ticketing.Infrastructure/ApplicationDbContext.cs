@@ -15,6 +15,9 @@ namespace Ticketing.Infrastructure
         public DbSet<Event> Events { get; set; }
         public DbSet<Ticket> Tickets { get; set; }
         public DbSet<TicketType> TicketTypes { get; set; }
+        public DbSet<Country> Countries { get; set; }
+        public DbSet<State> States { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

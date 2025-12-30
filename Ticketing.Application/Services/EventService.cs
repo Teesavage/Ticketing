@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using AutoMapper;
 using Microsoft.Extensions.Configuration;
+using Ticketing.Application.CacheInterfaces;
 using Ticketing.Application.DTOs.Requests;
 using Ticketing.Application.DTOs.Responses;
 using Ticketing.Application.Interfaces;
@@ -17,16 +18,17 @@ namespace Ticketing.Application.Services
         private readonly IMapper _mapper;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IConfiguration _config;
+        private readonly ILocationCacheService _locationCacheService;
 
-        public EventService(IMapper mapper, IUnitOfWork unitOfWork, IConfiguration config)
+        public EventService(IMapper mapper, IUnitOfWork unitOfWork, IConfiguration config, ILocationCacheService locationCacheService)
         {
             _mapper = mapper;
             _unitOfWork = unitOfWork;
             _config = config;
+            _locationCacheService = locationCacheService;
         }
 
         #pragma warning disable CS8604 // Possible null reference argument.
-        #pragma warning disable CS8602 // Dereference of a possibly null reference.
 
         public async Task<ApiResponse<EventResponse>> AddEvent(EventRequest newEvent)
         {
@@ -41,6 +43,10 @@ namespace Ticketing.Application.Services
 
             if (string.IsNullOrWhiteSpace(newEvent.EventDescription))
                 errors.Add("Event description is required");
+            if (newEvent.CountryId <= 0)
+                errors.Add("Valid CountryId is required");
+            if (newEvent.StateId <= 0)
+                errors.Add("Valid StateId is required");
 
             // if (string.IsNullOrWhiteSpace(newEvent.OrganizerEmail))
             //     errors.Add("Organizer email is required");
@@ -102,6 +108,12 @@ namespace Ticketing.Application.Services
                 var user = await _unitOfWork.Users.Get(u => u.Id == newEvent.CreatedBy);
                 if (user == null)
                     return ApiResponse<EventResponse>.FailureResponse(["User not found"]);
+
+                // Cached location validation
+                if (!await _locationCacheService.IsValidStateForCountry(newEvent.CountryId, newEvent.StateId))
+                {
+                    return ApiResponse<EventResponse>.FailureResponse(["Invalid state for the selected country"]);
+                }
 
                 // Map request to entity
                 var eventEntity = _mapper.Map<Event>(newEvent);

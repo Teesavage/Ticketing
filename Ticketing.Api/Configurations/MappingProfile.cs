@@ -25,6 +25,8 @@ namespace Ticketing.Api.Configurations
             CreateMap<Event, EventResponse>()
                 .ForMember(dest => dest.CreatorName, opt => opt.MapFrom(src => src.Creator.FirstName + " " + src.Creator.LastName))
                 .ForMember(dest => dest.EventTypeName, opt => opt.MapFrom(src => src.EventType.ToString()))
+                .ForMember(dest => dest.Country, opt => opt.MapFrom(src => src.Country.Name))
+                .ForMember(dest => dest.State, opt => opt.MapFrom(src => src.State.Name))
                 .ReverseMap();
             CreateMap<TicketTypeRequest, TicketType>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore())
@@ -42,7 +44,16 @@ namespace Ticketing.Api.Configurations
                 .ForMember(dest => dest.EventId, opt => opt.MapFrom(src => src.TicketType.Event.Id))
                 .ForMember(dest => dest.EventTitle, opt => opt.MapFrom(src => src.TicketType.Event.EventTitle))
                 .ForMember(dest => dest.EventDateTime, opt => opt.MapFrom(src => src.TicketType.Event.EventDateTime))
+                .ForMember(dest => dest.Country, opt => opt.MapFrom(src => src.TicketType.Event.Country.Name))
+                .ForMember(dest => dest.State, opt => opt.MapFrom(src => src.TicketType.Event.State.Name))
                 .ReverseMap();
+
+            CreateMap<Country, CountryResponse>().ReverseMap();
+            CreateMap<Country, CountryRequest>().ReverseMap();
+            CreateMap<State, StateResponse>()
+            .ForMember(dest => dest.Country, opt => opt.MapFrom(src => src.Country.Name))
+            .ReverseMap();
+            CreateMap<State, StateRequest>().ReverseMap();
         }
     }
 }

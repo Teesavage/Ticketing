@@ -9,6 +9,8 @@ namespace Ticketing.Application.DTOs.Requests
         public required string EventDescription { get; set; }
         // public required string OrganizerEmail { get; set; }
         // public string? OrganizerPhoneNo { get; set; }
+        public int CountryId { get; set; }
+        public int StateId { get; set; }
         public required string Location { get; set; }
         public DateTime? EventDateTime { get; set; }
         public EventType? EventType { get; set; } //online or physical
@@ -22,6 +24,8 @@ namespace Ticketing.Application.DTOs.Requests
     {
         public string? EventTitle { get; set; }
         public string? EventDescription { get; set; }
+        public int CountryId { get; set; }
+        public int StateId { get; set; }
         public string? Location { get; set; }
         public DateTime? EventDateTime { get; set; }
         public EventType? EventType { get; set; }

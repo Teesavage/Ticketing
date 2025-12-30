@@ -10,6 +10,10 @@ namespace Ticketing.Application.DTOs.Responses
         public required string EventDescription { get; set; }
         public required string OrganizerEmail { get; set; }
         public string? OrganizerPhoneNo { get; set; }
+        public int CountryId { get; set; }
+        public string? Country { get; set; }
+        public int StateId { get; set; }
+        public string? State { get; set; }
         public required string Location { get; set; }
         public required DateTime EventDateTime { get; set; }
         public EventType EventType { get; set; } //online or physical
@@ -41,6 +45,8 @@ namespace Ticketing.Application.DTOs.Responses
         public decimal TicketPrice { get; set; }
         public long? EventId { get; set; }
         public string? EventTitle { get; set; }
+        public string? Country { get; set; }
+        public string? State { get; set; }
         public DateTime? EventDateTime { get; set; }
         public DateTime PurchaseTime { get; set; }
         public int Quantity { get; set; }
