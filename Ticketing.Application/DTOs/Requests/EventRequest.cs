@@ -24,8 +24,8 @@ namespace Ticketing.Application.DTOs.Requests
     {
         public string? EventTitle { get; set; }
         public string? EventDescription { get; set; }
-        public int CountryId { get; set; }
-        public int StateId { get; set; }
+        public int? CountryId { get; set; }
+        public int? StateId { get; set; }
         public string? Location { get; set; }
         public DateTime? EventDateTime { get; set; }
         public EventType? EventType { get; set; }

@@ -171,7 +171,7 @@ namespace Ticketing.Application.Services
             {
                 var eventEntity = await _unitOfWork.Events.Get(
                     e => e.Id == eventId,
-                    includes: ["TicketTypes", "Creator"]
+                    includes: ["TicketTypes", "Creator", "Country", "State"]
                 );
 
                 if (eventEntity == null)
@@ -200,7 +200,7 @@ namespace Ticketing.Application.Services
 
                 var events = await _unitOfWork.Events.GetAll(
                     expression: filter,
-                    includes: ["TicketTypes", "Creator"],
+                    includes: ["TicketTypes", "Creator", "Country", "State"],
                     orderBy: q => q.OrderByDescending(e => e.CreatedAt)
                 );
 
@@ -226,10 +226,12 @@ namespace Ticketing.Application.Services
         }
 
         // Updates event details only (no ticketTypes)
+        #pragma warning disable CS8629 // Nullable value type may be null.
+
         public async Task<ApiResponse<EventResponse>> UpdateEvent(long eventId, EventUpdateRequest updatedEvent)
         {
             if (updatedEvent is null)
-                return ApiResponse<EventResponse>.FailureResponse(["Event data is null"]);
+                return ApiResponse<EventResponse>.FailureResponse(new List<string> { "Event data is null" });
 
             var errors = new List<string>();
 
@@ -241,9 +243,9 @@ namespace Ticketing.Application.Services
                 );
 
                 if (existingEvent == null)
-                    return ApiResponse<EventResponse>.FailureResponse(["Event not found"]);
+                    return ApiResponse<EventResponse>.FailureResponse(new List<string> { "Event not found" });
 
-                // Validation - only validate fields that are being updated (not null)
+                // Validation - only for non-null updates
                 if (updatedEvent.EventTitle != null && string.IsNullOrWhiteSpace(updatedEvent.EventTitle))
                     errors.Add("Event title cannot be empty");
 
@@ -256,11 +258,19 @@ namespace Ticketing.Application.Services
                 if (updatedEvent.EventDateTime.HasValue && updatedEvent.EventDateTime.Value < DateTime.UtcNow)
                     errors.Add("Event date cannot be in the past");
 
-                // if (updatedEvent.EventTime != null && string.IsNullOrWhiteSpace(updatedEvent.EventTime))
-                //     errors.Add("Event time cannot be empty");
-
                 if (updatedEvent.EventType.HasValue && !Enum.IsDefined(typeof(EventType), updatedEvent.EventType.Value))
                     errors.Add("Invalid event type");
+
+                // ✅ Validate Country + State only if being updated
+                if (updatedEvent.CountryId.HasValue || updatedEvent.StateId.HasValue)
+                {
+                    int countryIdToCheck = updatedEvent.CountryId ?? (int)existingEvent.CountryId;
+                    int stateIdToCheck = updatedEvent.StateId ?? (int)existingEvent.StateId;
+
+                    bool isValidLocation = await _locationCacheService.IsValidStateForCountry(countryIdToCheck, stateIdToCheck);
+                    if (!isValidLocation)
+                        errors.Add("Invalid state or state does not belong to the selected country");
+                }
 
                 if (errors.Any())
                     return ApiResponse<EventResponse>.FailureResponse(errors);
@@ -278,11 +288,15 @@ namespace Ticketing.Application.Services
                 if (updatedEvent.EventDateTime.HasValue)
                     existingEvent.EventDateTime = updatedEvent.EventDateTime.Value;
 
-                // if (!string.IsNullOrWhiteSpace(updatedEvent.EventTime))
-                //     existingEvent.EventTime = updatedEvent.EventTime;
-
                 if (updatedEvent.EventType.HasValue)
                     existingEvent.EventType = updatedEvent.EventType.Value;
+
+                // Update Country + State if provided
+                if (updatedEvent.CountryId.HasValue)
+                    existingEvent.CountryId = updatedEvent.CountryId.Value;
+
+                if (updatedEvent.StateId.HasValue)
+                    existingEvent.StateId = updatedEvent.StateId.Value;
 
                 existingEvent.UpdatedAt = DateTime.UtcNow;
 
@@ -295,7 +309,7 @@ namespace Ticketing.Application.Services
             catch (Exception ex)
             {
                 return ApiResponse<EventResponse>.FailureResponse(
-                    [ex.Message, "An error occurred while updating the event."]
+                    new List<string> { ex.Message, "An error occurred while updating the event." }
                 );
             }
         }

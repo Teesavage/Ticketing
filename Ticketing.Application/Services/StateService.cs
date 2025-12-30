@@ -1,4 +1,5 @@
 using AutoMapper;
+using Microsoft.Extensions.Caching.Memory;
 using Ticketing.Application.DTOs.Requests;
 using Ticketing.Application.DTOs.Responses;
 using Ticketing.Application.Interfaces;
@@ -12,11 +13,13 @@ namespace Ticketing.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly IMemoryCache _cache;
 
-        public StateService(IUnitOfWork unitOfWork, IMapper mapper)
+        public StateService(IUnitOfWork unitOfWork, IMapper mapper, IMemoryCache cache)
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _cache = cache;
         }
 
         // Create single state
@@ -47,6 +50,7 @@ namespace Ticketing.Application.Services
             var stateEntity = _mapper.Map<State>(state);
             await _unitOfWork.States.Insert(stateEntity);
             await _unitOfWork.Save();
+            _cache.Remove($"states_by_country_{state.CountryId}");
             
             var response = _mapper.Map<StateResponse>(stateEntity);
             return ApiResponse<StateResponse>.SuccessResponse(response);
@@ -116,6 +120,7 @@ namespace Ticketing.Application.Services
                 // Map to entity
                 var stateEntity = _mapper.Map<State>(stateRequest);
                 statesToInsert.Add(stateEntity);
+                _cache.Remove($"states_by_country_{stateRequest.CountryId}");
             }
             
             // If there are any valid states to insert
@@ -181,6 +186,7 @@ namespace Ticketing.Application.Services
             
             _unitOfWork.States.Update(existingState);
             await _unitOfWork.Save();
+            _cache.Remove($"states_by_country_{state.CountryId}");
             
             var response = _mapper.Map<StateResponse>(existingState);
             return ApiResponse<StateResponse>.SuccessResponse(response);
@@ -198,6 +204,7 @@ namespace Ticketing.Application.Services
 
             await _unitOfWork.States.Delete(existingState.Id);
             await _unitOfWork.Save();
+            _cache.Remove($"states_by_country_{existingState.CountryId}");
             
             return ApiResponse<bool>.SuccessResponse(true, "State deleted successfully.");
         }
