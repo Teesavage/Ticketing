@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using AutoMapper;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Identity.Client;
 using Ticketing.Application.CacheInterfaces;
 using Ticketing.Application.DTOs.Requests;
 using Ticketing.Application.DTOs.Responses;
@@ -866,6 +867,11 @@ namespace Ticketing.Application.Services
                     ["An error occurred while retrieving tickets. Please try again.", ex.Message]
                 );
             }
+        }
+
+        public async Task<bool> IsValidState(int countryId, int stateId)
+        {
+            return await _locationCacheService.IsValidStateForCountry(countryId, stateId);
         }
 
     }

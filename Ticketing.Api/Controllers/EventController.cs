@@ -16,7 +16,7 @@ namespace Ticketing.Api.Controllers
         {
             _eventService = eventService;
         }
-        [Authorize(Roles = "Manager, Admin, Organizer")]
+        // [Authorize(Roles = "Manager, Admin, Organizer")]
         [HttpPost("createEvent")]
         public async Task<IActionResult> CreateEvent([FromBody] EventRequest request)
         {
@@ -47,7 +47,7 @@ namespace Ticketing.Api.Controllers
             return Ok(response);
         }
 
-        [Authorize(Roles = "Manager, Admin, Organizer")]
+        // [Authorize(Roles = "Manager, Admin, Organizer")]
         [HttpPut("updateEvent/{eventId}")]
         public async Task<IActionResult> UpdateEvent(long eventId, [FromBody] EventUpdateRequest request)
         {
@@ -57,7 +57,7 @@ namespace Ticketing.Api.Controllers
             return Ok(response);
         }
 
-        [Authorize(Roles = "Manager, Admin, Organizer")]
+        // [Authorize(Roles = "Manager, Admin, Organizer")]
         [HttpPost("addTicketTypes")]
         public async Task<IActionResult> AddTicketTypes(long eventId, [FromBody] List<TicketTypeRequest> ticketTypes)
         {
@@ -76,7 +76,7 @@ namespace Ticketing.Api.Controllers
             return Ok(response);
         }
 
-        [Authorize(Roles = "Manager, Admin, Organizer")]
+        // [Authorize(Roles = "Manager, Admin, Organizer")]
         [HttpPut("updateTicketTypes")]
         public async Task<IActionResult> UpdateTicketType(long eventId, long ticketTypeId, [FromBody] TicketTypeRequest ticketType)
         {
@@ -86,7 +86,7 @@ namespace Ticketing.Api.Controllers
             return Ok(response);
         }
 
-        [Authorize(Roles = "Manager, Admin, Organizer")]
+        // [Authorize(Roles = "Manager, Admin, Organizer")]
         [HttpDelete("deleteTicketType")]
         public async Task<IActionResult> DeleteTicketType(long eventId, long ticketTypeId)
         {
@@ -96,7 +96,7 @@ namespace Ticketing.Api.Controllers
             return Ok(response);
         }
 
-        [Authorize(Roles = "Manager, Admin, Organizer")]
+        // [Authorize(Roles = "Manager, Admin, Organizer")]
         [HttpDelete("deleteEvent/{eventId}")]
         public async Task<IActionResult> DeleteEvent(long eventId)
         {
@@ -106,7 +106,7 @@ namespace Ticketing.Api.Controllers
             return Ok(response);
         }
 
-        [Authorize(Roles = "Manager, Admin, Organizer")]
+        // [Authorize(Roles = "Manager, Admin, Organizer")]
         [HttpPatch("deactivateEvent/{eventId}")]
         public async Task<IActionResult> DeactivateEvent(long eventId)
         {
@@ -116,7 +116,7 @@ namespace Ticketing.Api.Controllers
             return Ok(response);
         }
 
-        [Authorize(Roles = "Manager, Admin, Organizer")]
+        // [Authorize(Roles = "Manager, Admin, Organizer")]
         [HttpPatch("reactivateEvent/{eventId}")]
         public async Task<IActionResult> ReactivateEvent(long eventId)
         {
@@ -161,6 +161,13 @@ namespace Ticketing.Api.Controllers
                 return BadRequest(response);
             return Ok(response);
         }
-               
+
+        [HttpGet("isValidState")]
+        public async Task<IActionResult> IsValidState(int countryId, int stateId)
+        {
+            var isValid = await _eventService.IsValidState(countryId, stateId);
+            return Ok(isValid);
+        }
+
     }
 }

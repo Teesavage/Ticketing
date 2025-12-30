@@ -32,5 +32,7 @@ namespace Ticketing.Application.Interfaces
             PaginationFilter paginationFilter,
             bool includeInactive = false
         );
+
+        Task<bool> IsValidState(int countryId, int stateId);
     }
 }

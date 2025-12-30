@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Serilog;
+using Serilog.Events;
+using Serilog.Sinks.MSSqlServer;
 using Ticketing.Api.Configurations;
 using Ticketing.Application.CacheInterfaces;
 using Ticketing.Application.CacheServices;
@@ -17,6 +20,24 @@ var builder = WebApplication.CreateBuilder(args);
 
 // builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
 //     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+var sinkOptions = new MSSqlServerSinkOptions
+{
+    TableName = "Logs",
+    AutoCreateSqlTable = true
+};
+
+builder.Host.UseSerilog((context, services, configuration) =>
+{
+    configuration
+        .ReadFrom.Configuration(context.Configuration)
+        .WriteTo.Console()
+        .WriteTo.MSSqlServer(
+            connectionString: context.Configuration.GetConnectionString("DefaultConnection"),
+            sinkOptions: sinkOptions,
+            restrictedToMinimumLevel: LogEventLevel.Information
+        );
+});
 
 builder.Services.AddControllers();
 
