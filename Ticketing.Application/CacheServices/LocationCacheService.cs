@@ -83,7 +83,3 @@ namespace Ticketing.Application.CacheServices
 
     }
 }
-
-//_logger.LogInformation("Getting states for country {CountryId}", countryId);
-// _logger.LogWarning("Country {CountryId} not found", countryId);
-// _logger.LogError(ex, "Failed to get states for country {CountryId}", countryId);

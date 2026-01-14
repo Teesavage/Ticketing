@@ -20,13 +20,15 @@ namespace Ticketing.Application.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IConfiguration _config;
         private readonly ILogger<EventService> _logger;
+        private readonly IEmailService _emailService;
 
-        public UserService(IMapper mapper, IUnitOfWork unitOfWork, IConfiguration config, ILogger<EventService> logger)
+        public UserService(IMapper mapper, IUnitOfWork unitOfWork, IConfiguration config, ILogger<EventService> logger, IEmailService emailService)
         {
             _mapper = mapper;
             _unitOfWork = unitOfWork;
             _config = config;
             _logger = logger;
+            _emailService = emailService;
         }
 
         public async Task<ApiResponse<UserResponse>> RegisterUserAsync(UserRequest request)
@@ -75,6 +77,8 @@ namespace Ticketing.Application.Services
 
             await _unitOfWork.UserRoles.Insert(userRole);
             await _unitOfWork.Save();
+
+            await _emailService.SendWelcomeEmail(userEntity.Email, userEntity.FirstName);
 
             var userResponse = _mapper.Map<UserResponse>(userEntity);
 

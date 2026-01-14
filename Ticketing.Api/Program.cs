@@ -109,6 +109,7 @@ builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<IStateService, StateService>();
 builder.Services.AddScoped<ICountryService, CountryService>();
 builder.Services.AddScoped<ILocationCacheService, LocationCacheService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 // JWT Authentication
 builder.Services.AddAuthentication(options =>
