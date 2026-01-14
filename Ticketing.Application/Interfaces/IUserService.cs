@@ -16,6 +16,8 @@ namespace Ticketing.Application.Interfaces
         public Task<ApiResponse<UserResponse>> UpdateUserAsync(Guid userId, UpdateUserRequest request);
         public Task<ApiResponse<UserResponse>> UpdateUserRoleAsync(Guid userId, UpdateUserRole request);
         public Task<ApiResponse<string>> DeleteUserAsync(Guid userId);
+        Task<ApiResponse<string>> ChangePassword(ChangePasswordRequest request);
+        Task<ApiResponse<string>> ResetPassword(PasswordReset request);
     }
 
 }

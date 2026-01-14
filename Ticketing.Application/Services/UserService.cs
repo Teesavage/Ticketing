@@ -195,6 +195,47 @@ namespace Ticketing.Application.Services
             return ApiResponse<string>.SuccessResponse("User deleted successfully.");
         }
 
+        public async Task<ApiResponse<string>> ChangePassword(ChangePasswordRequest request)
+        {
+            var user = await _unitOfWork.Users.Get(u => u.Email == request.Email);
+            if (user == null)
+                return ApiResponse<string>.FailureResponse(["User not found."]);
+            if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash))
+                return ApiResponse<string>.FailureResponse(["Current password is incorrect."]);
+            var validationErrors = ValidatePassword(request.NewPassword);
+            if (validationErrors.Count > 0)
+                return ApiResponse<string>.FailureResponse(validationErrors);
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+            _unitOfWork.Users.Update(user);
+            await _unitOfWork.Save();
+
+            // await _gridEmailService.SendPasswordChangedEmail(request.Email);
+            _logger.LogInformation($"User {user.Id} changed password at {DateTime.UtcNow}");
+            return ApiResponse<string>.SuccessResponse("Password updated successfully.");
+        }
+
+        public async Task<ApiResponse<string>> ResetPassword(PasswordReset request)
+        {
+            // Validate password
+            var validationErrors = ValidatePassword(request.NewPassword);
+            if (validationErrors.Count > 0)
+                return ApiResponse<string>.FailureResponse(validationErrors);
+
+            var user = await _unitOfWork.Users.Get(u => u.Email == request.Email);
+            if (user == null)
+                return ApiResponse<string>.FailureResponse(new List<string> { "User not found." });
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+            _unitOfWork.Users.Update(user);
+            await _unitOfWork.Save();
+            
+            // await _gridEmailService.SendPasswordChangedEmail(adminUser.Email);
+            _logger.LogInformation($"User {user.Id} reset password at {DateTime.UtcNow}");
+
+            return ApiResponse<string>.SuccessResponse("Successful", "Password reset successful.");
+        }
+
         private string GenerateJwt(User user)
         {
             #pragma warning disable CS8602 // Dereference of a possibly null reference.

@@ -119,6 +119,24 @@ namespace Ticketing.Api.Controllers
             return Ok(response);
         }
 
+        [HttpPatch("changePassword")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+        {
+            var response = await _userService.ChangePassword(request);
+            if (!response.Success)
+                return BadRequest(response);
+            return Ok(response);
+        }
+
+        [HttpPatch("resetPassword")]
+        public async Task<IActionResult> ResetPassword([FromBody] PasswordReset request)
+        {
+            var response = await _userService.ResetPassword(request);
+            if (!response.Success)
+                return BadRequest(response);
+            return Ok(response);
+        }
+
     }
 
 };
