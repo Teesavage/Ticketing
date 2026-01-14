@@ -126,7 +126,11 @@ namespace Ticketing.Application.Services
             var response = _mapper.Map<LoginResponse>(user);
             response.Token = token;
 
-            _logger.LogInformation($"User {user.Id} logged in at {DateTime.UtcNow}");
+            _logger.LogInformation(
+                "User {UserId} logged in at {Time}",
+                user.Id,
+                DateTime.UtcNow
+            );
             return ApiResponse<LoginResponse>.SuccessResponse(response, "Login successful.");
         }
 
@@ -211,7 +215,12 @@ namespace Ticketing.Application.Services
             await _unitOfWork.Save();
 
             // await _gridEmailService.SendPasswordChangedEmail(request.Email);
-            _logger.LogInformation($"User {user.Id} changed password at {DateTime.UtcNow}");
+            // _logger.LogInformation($"User {user.Id} changed password at {DateTime.UtcNow}");
+            _logger.LogInformation(
+                "User {UserId} changed password at {ResetTime}",
+                user.Id,
+                DateTime.UtcNow
+            );
             return ApiResponse<string>.SuccessResponse("Password updated successfully.");
         }
 
@@ -231,7 +240,12 @@ namespace Ticketing.Application.Services
             await _unitOfWork.Save();
             
             // await _gridEmailService.SendPasswordChangedEmail(adminUser.Email);
-            _logger.LogInformation($"User {user.Id} reset password at {DateTime.UtcNow}");
+            // _logger.LogInformation($"User {user.Id} reset password at {DateTime.UtcNow}");
+            _logger.LogInformation(
+                "User {UserId} reset password at {ResetTime}",
+                user.Id,
+                DateTime.UtcNow
+            );
 
             return ApiResponse<string>.SuccessResponse("Successful", "Password reset successful.");
         }
