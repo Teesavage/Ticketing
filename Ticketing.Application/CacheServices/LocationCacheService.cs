@@ -26,8 +26,8 @@ namespace Ticketing.Application.CacheServices
             _logger = logger;
         }
 
-        #pragma warning disable CS8602 // Dereference of a possibly null reference.
-        #pragma warning disable CS8603 // Possible null reference return.
+        // #pragma warning disable CS8602 // Dereference of a possibly null reference.
+        // #pragma warning disable CS8603 // Possible null reference return.
 
 
         public async Task<bool> IsValidStateForCountry(int countryId, int stateId)
@@ -39,7 +39,7 @@ namespace Ticketing.Application.CacheServices
                 cacheKey,
                 async entry =>
                 {
-                    _logger.LogInformation($"CACHE MISS: {cacheKey}");
+                    _logger.LogInformation("CACHE MISS: {CacheKey}", cacheKey);
 
                     entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(24);
 
@@ -54,32 +54,39 @@ namespace Ticketing.Application.CacheServices
                     return stateIds;
                 });
 
-            _logger.LogInformation($"CACHE HIT: {cacheKey}");
+            _logger.LogInformation("CACHE HIT: {CacheKey}", cacheKey);
 
-            return stateIds.Contains(stateId);
+            return stateIds?.Contains(stateId) == true;
         }
 
         public async Task<IEnumerable<StateResponse>> GetStatesByCountryCached(int countryId)
         {
             var cacheKey = $"states_by_country_list_{countryId}";
 
-            return await _cache.GetOrCreateAsync(
+            if (_cache.TryGetValue(cacheKey, out IEnumerable<StateResponse>? cachedStates))
+            {
+                _logger.LogInformation("CACHE HIT: {CacheKey}", cacheKey);
+                return cachedStates ?? [];
+            }
+
+            _logger.LogInformation("CACHE MISS: {CacheKey}", cacheKey);
+
+            var states = await _unitOfWork.States.GetAll(
+                s => s.CountryId == countryId,
+                includes: ["Country"]
+            );
+
+            var mappedStates = _mapper.Map<IEnumerable<StateResponse>>(states);
+
+            _cache.Set(
                 cacheKey,
-                async entry =>
-                {
-                    _logger.LogInformation($"CACHE MISS: {cacheKey}");
+                mappedStates,
+                TimeSpan.FromHours(24)
+            );
 
-                    entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(24);
-
-                    var states = await _unitOfWork.States.GetAll(
-                        s => s.CountryId == countryId,
-                        includes: ["Country"]
-                    );
-                    _logger.LogInformation($"CACHE HIT: {cacheKey}");
-
-                    return _mapper.Map<IEnumerable<StateResponse>>(states);
-                });
+            return mappedStates;
         }
+
 
     }
 }

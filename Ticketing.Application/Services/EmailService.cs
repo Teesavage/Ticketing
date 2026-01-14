@@ -102,7 +102,7 @@ namespace Ticketing.Application.Services
             {
                 using var client = new SmtpClient();
                 await client.ConnectAsync(_smtpHost, _smtpPort, SecureSocketOptions.StartTls); // or None, if TLS not used
-                await client.AuthenticateAsync(_emailFrom, _emailPassword); // Uncomment if authentication is required
+                await client.AuthenticateAsync(_emailFrom, _emailPassword); // comment if authentication is  not required (SecureSocketOptions.None)
                 await client.SendAsync(message);
                 await client.DisconnectAsync(true);
 
