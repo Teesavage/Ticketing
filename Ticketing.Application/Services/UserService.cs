@@ -172,13 +172,18 @@ namespace Ticketing.Application.Services
             _unitOfWork.Users.Update(user);
             await _unitOfWork.Save();
 
+            _logger.LogInformation(
+                "User {UserId} updated their profile at {UpdateTime}",
+                user.Id,
+                DateTime.UtcNow
+            );
             var response = _mapper.Map<UserResponse>(user);
             return ApiResponse<UserResponse>.SuccessResponse(response, "User updated successfully.");
         }
 
         public async Task<ApiResponse<UserResponse>> UpdateUserRoleAsync(Guid userId, UpdateUserRole request)
         {
-            var user = await _unitOfWork.Users.Get(u => u.Id == userId);
+            var user = await _unitOfWork.Users.Get(u => u.Id == userId, includes: ["Role"]);
             if (user == null)
                 return ApiResponse<UserResponse>.FailureResponse(["User not found."]);
 
@@ -186,6 +191,12 @@ namespace Ticketing.Application.Services
 
             _unitOfWork.Users.Update(user);
             await _unitOfWork.Save();
+            _logger.LogInformation(
+                "User {UserId} updated their role to {Role} at {UpdateTime}",
+                user.Id,
+                user.Role?.RoleName,
+                DateTime.UtcNow
+            );
 
             var response = _mapper.Map<UserResponse>(user);
             return ApiResponse<UserResponse>.SuccessResponse(response, "User role updated successfully.");
@@ -199,6 +210,12 @@ namespace Ticketing.Application.Services
 
             await _unitOfWork.Users.DeleteGuid(user.Id);
             await _unitOfWork.Save();
+
+            _logger.LogInformation(
+                "User {UserId} was deleted at {UpdateTime}",
+                userId,
+                DateTime.UtcNow
+            );
 
             return ApiResponse<string>.SuccessResponse("User deleted successfully.");
         }

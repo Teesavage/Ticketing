@@ -121,7 +121,8 @@ namespace Ticketing.Application.Services
             var replacements = new Dictionary<string, string>
             {
                 { "UserEmail", email },
-                { "UserName", firstName }
+                { "UserName", firstName },
+                { "Date", DateTime.Now.ToString("MMMM dd, yyyy") }
             };
 
             return await SendTemplatedEmailAsync(
